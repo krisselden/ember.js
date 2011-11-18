@@ -380,6 +380,7 @@ function processNames(paths, root, seen) {
   var idx = paths.length;
   for(var key in root) {
     if (!root.hasOwnProperty || !root.hasOwnProperty(key)) continue;
+    if (root == window && !key.match(/$[A-Z].*/)) continue;
     var obj = root[key];
     paths[idx] = key;
 
