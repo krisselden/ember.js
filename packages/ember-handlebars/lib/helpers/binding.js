@@ -35,18 +35,21 @@ function bind(property, options, preserveContext, shouldDisplay, valueNormalizer
     // Create the view that will wrap the output of this template/property
     // and add it to the nearest view's childViews array.
     // See the documentation of Ember._HandlebarsBoundView for more.
-    var bindView = view.createChildView(Ember._HandlebarsBoundView, {
-      preserveContext: preserveContext,
-      shouldDisplayFunc: shouldDisplay,
-      valueNormalizerFunc: valueNormalizer,
-      displayTemplate: fn,
-      inverseTemplate: inverse,
-      path: path,
-      pathRoot: pathRoot,
-      previousContext: currentContext,
-      isEscaped: !options.hash.unescaped,
-      templateData: options.data
-    });
+
+    var bindView = new Ember._HandlebarsBoundView(
+      preserveContext,
+      shouldDisplay,
+      valueNormalizer,
+      fn,
+      inverse,
+      path,
+      pathRoot,
+      currentContext,
+      !options.hash.unescaped,
+      options.data
+    );
+
+    view.createChildView(bindView);
 
     view.appendChild(bindView);
 

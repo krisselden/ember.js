@@ -26,6 +26,31 @@ require('ember-handlebars/views/metamorph_view');
 Ember._HandlebarsBoundView = Ember._MetamorphView.extend({
 /** @scope Ember._HandlebarsBoundView.prototype */
 
+  init: function (
+    preserveContext,
+    shouldDisplayFunc,
+    valueNormalizerFunc,
+    displayTemplate,
+    inverseTemplate,
+    path,
+    pathRoot,
+    previousContext,
+    isEscaped,
+    templateData) {
+    this.preserveContext = preserveContext;
+    this.shouldDisplayFunc = shouldDisplayFunc;
+    this.valueNormalizerFunc = valueNormalizerFunc,
+    this.displayTemplate = displayTemplate;
+    this.inverseTemplate = inverseTemplate;
+    this.shouldDisplayFunc = shouldDisplayFunc;
+    this.path = path;
+    this.pathRoot = pathRoot;
+    this.previousContext = previousContext;
+    this.isEscaped = isEscaped;
+    this.templateData = templateData;
+    this._super();
+  },
+
   /**
     The function used to determine if the `displayTemplate` or
     `inverseTemplate` should be rendered. This should be a function that takes
@@ -100,9 +125,9 @@ Ember._HandlebarsBoundView = Ember._MetamorphView.extend({
   pathRoot: null,
 
   normalizedValue: Ember.computed(function() {
-    var path = get(this, 'path'),
-        pathRoot  = get(this, 'pathRoot'),
-        valueNormalizer = get(this, 'valueNormalizerFunc'),
+    var path = this.path,
+        pathRoot  = this.pathRoot,
+        valueNormalizer = this.valueNormalizerFunc,
         result, templateData;
 
     // Use the pathRoot as the result if no path is provided. This
@@ -112,7 +137,7 @@ Ember._HandlebarsBoundView = Ember._MetamorphView.extend({
     if (path === '') {
       result = pathRoot;
     } else {
-      templateData = get(this, 'templateData');
+      templateData = this.templateData;
       result = getPath(pathRoot, path, { data: templateData });
     }
 
@@ -144,14 +169,14 @@ Ember._HandlebarsBoundView = Ember._MetamorphView.extend({
   render: function(buffer) {
     // If not invoked via a triple-mustache ({{{foo}}}), escape
     // the content of the template.
-    var escape = get(this, 'isEscaped');
+    var escape = this.isEscaped;
 
-    var shouldDisplay = get(this, 'shouldDisplayFunc'),
-        preserveContext = get(this, 'preserveContext'),
-        context = get(this, 'previousContext');
+    var shouldDisplay = this.shouldDisplayFunc,
+        preserveContext = this.preserveContext,
+        context = this.previousContext;
 
-    var inverseTemplate = get(this, 'inverseTemplate'),
-        displayTemplate = get(this, 'displayTemplate');
+    var inverseTemplate = this.inverseTemplate,
+        displayTemplate = this.displayTemplate;
 
     var result = get(this, 'normalizedValue');
     this._lastNormalizedValue = result;
