@@ -483,9 +483,6 @@ function contextDidChange(view) {
   }
 }
 
-var createElementForView = _createElementForView;
 var render = _render;
 
-Ember.htmlbarsAppendTo = appendTo;
-
-export { reset, events, appendTo, render, createChildView, appendChild, remove, destroy, createElementForView, insertChildContent };
+export { reset, events, appendTo, render, remove, destroy };
