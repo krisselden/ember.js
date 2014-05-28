@@ -1,6 +1,6 @@
 import { testsFor, View, $, equalHTML, appendTo } from "ember-metal-views/tests/test_helpers";
 
-module("ember-metal-views - children", {
+QUnit.module("ember-metal-views - children", {
   setup: function() {
     $('#qunit-fixture').innerHTML = '';
   }
@@ -29,8 +29,8 @@ test("didInsertElement fires after children are rendered", function() {
       {isView: true, tagName: 'li', textContent: 'ohai'}
     ],
 
-    didInsertElement: function(el) {
-      equal(el.outerHTML, "<ul><li>ohai</li></ul>", "Children are rendered");
+    didInsertElement: function() {
+      equalHTML(this.element.parentNode, "<ul><li>ohai</li></ul>", "Children are rendered");
     }
   };
 

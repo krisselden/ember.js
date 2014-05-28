@@ -1,6 +1,6 @@
 import { testsFor, View, $, equalHTML, appendTo } from "ember-metal-views/tests/test_helpers";
 
-module("ember-metal-views - template support", {
+QUnit.module("ember-metal-views - template support", {
   setup: function() {
     $('#qunit-fixture').innerHTML = '';
   }

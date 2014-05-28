@@ -6,7 +6,7 @@ module View from "ember-metal-views";
 export { View }
 
 export function testsFor(name, options) {
-  module(name, {
+  QUnit.module(name, {
     setup: function() {
       $('#qunit-fixture').innerHTML = '';
       if (options && options.setup) { options.setup(); }
