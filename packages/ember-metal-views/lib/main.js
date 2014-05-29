@@ -217,27 +217,6 @@ function _renderContents(view, el) {
   return el;
 }
 
-function _triggerRecursively(view, functionOrEventName, skipParent) {
-  var childViews = view._childViews, // FIXME
-      len = childViews && childViews.length;
-
-  if (childViews && len > 0) {
-    for (var i = 0; i < len; i++) {
-      _triggerRecursively(childViews[i], functionOrEventName);
-    }
-  }
-
-  if (skipParent !== true) {
-    if (typeof functionOrEventName === 'string') {
-      if (view[functionOrEventName]) {
-        view[functionOrEventName](view.element);
-      }
-    } else {
-      functionOrEventName(view);
-    }
-  }
-}
-
 function clearRenderHooks(view) {
   if (view.isRendered) {
     if (view.willClearRender) {
