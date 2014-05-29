@@ -1,9 +1,6 @@
 import run from "ember-metal/run_loop";
 import { indexOf } from "ember-metal/array";
-import { meta, META_KEY } from "ember-metal/utils";
 import { createElement } from "ember-metal-views/dom";
-import { addObserver } from "ember-metal/observer";
-import { set } from "ember-metal/property_set";
 import { lookupView, setupView, teardownView, setupEventDispatcher, reset, events } from "ember-metal-views/events";
 import { setupClassNames, setupClassNameBindings, setupAttributeBindings } from "ember-metal-views/attributes";
 import { Morph } from "morph";
@@ -13,18 +10,6 @@ import { sendEvent } from "ember-metal/events";
 // FIXME: avoid render/afterRender getting defined twice
 var queues = run.queues;
 queues.splice(indexOf.call(queues, 'actions')+1, 0, 'render', 'afterRender');
-
-/*
-var addObserver = Ember_addObserver || function() { console.log('TODO: implement addObserver'); },
-    set = Ember_set || function() { console.log('TODO: implement set'); };
-*/
-
-var FAKE_PROTO = {};
-
-addObserver(FAKE_PROTO, 'context', Ember.NO_TARGET, contextDidChange);
-addObserver(FAKE_PROTO, '_parentView', Ember.NO_TARGET, contextDidChange);
-
-var SHARED_META = meta(FAKE_PROTO);
 
 function Renderer() {}
 
@@ -124,7 +109,6 @@ function _render(_view, insert) {
 
   while (idx < views.length) {
     view = views[idx];
-    if (!view[META_KEY]) { view[META_KEY] = SHARED_META; }
 
     if (view.content) { view.context = view.content; } // CollectionView hack
 
@@ -140,7 +124,6 @@ function _render(_view, insert) {
       setupView(view);
 
       el.setAttribute('id', view.elementId);
-      if (view.isVisible === false) { el.style.display = 'none'; }
       setupClassNames(view);
       setupClassNameBindings(view);
       setupAttributeBindings(view);
@@ -257,18 +240,9 @@ function _renderContents(view, el) {
   } else if (view.innerHTML) { // TODO: bind?
     el.innerHTML = view.innerHTML;
   } else if (view.render) {
-    el = view.render(fakeBufferFor(el)); // should we use the return value?
   }
 
   return el;
-}
-
-function fakeBufferFor(el) {
-  return {
-    push: function(str) {
-      el.innerHTML += str;
-    }
-  };
 }
 
 function _triggerRecursively(view, functionOrEventName, skipParent) {
@@ -290,55 +264,6 @@ function _triggerRecursively(view, functionOrEventName, skipParent) {
       functionOrEventName(view);
     }
   }
-}
-
-function createChildView(view, childView, attrs) {
-  if (typeof childView === 'function') {
-    attrs = attrs || {};
-    // attrs.template = attemplate;
-    // attrs._context = context;
-    attrs._parentView = view;
-    attrs.container = view.container;
-    // attrs._morph = morph;
-    // container
-    // template data?
-
-    childView = childView.create(attrs);
-  } else if (typeof childView === 'string') {
-    var fullName = 'view:' + childView;
-    var View = view.container.lookupFactory(fullName);
-    attrs.container = view.container;
-
-    // Ember.assert("Could not find view: '" + fullName + "'", !!View);
-    // attrs.templateData = get(this, 'templateData');
-    childView = View.create(attrs);
-  } else if (typeof childView === 'object') {
-    if (childView.isView && childView._parentView === view && childView.container === view.container) { return childView; }
-    // Ember.assert('You must pass instance or subclass of View', view.isView);
-    // attrs.container = this.container;
-    // if (!get(view, 'templateData')) {
-    //   attrs.templateData = get(this, 'templateData');
-    // }
-    // view.template = template;
-    // view._context = context;
-    childView.container = view.container;
-    childView._parentView = view;
-    // view._morph = morph;
-    // Ember.setProperties(view, attrs);
-  }
-
-  return childView;
-}
-
-function appendChild(view, childView, attrs) {
-  childView = createChildView(view, childView, attrs);
-  var childViews = view._childViews;
-  if (!childViews) {
-    childViews = view._childViews = [childView];
-  } else {
-    childViews.push(childView);
-  }
-  return childView;
 }
 
 function clearRenderHooks(view) {
@@ -452,34 +377,6 @@ function remove(_view, shouldDestroy) {
       } else {
         // TODO: we need to do for metal views
       }
-    }
-  }
-}
-
-function contextDidChange(view) {
-  var newContext = view.context,
-      streams = view.streams,
-      streamKeys = streams && Object.keys(streams), // TODO: should we just for in, or is this actually faster?
-      stream, i, l;
-
-  if (streamKeys) {
-    for (i = 0, l = streamKeys.length; i < l; i++) {
-      stream = streams[streamKeys[i]];
-      stream.updateObject(newContext);
-    }
-  }
-
-  var childViews = view._childViews,
-      childView;
-  if (childViews) {
-    for (i = 0, l = childViews.length; i < l; i++) {
-      childView = childViews[i];
-
-      // if context was explicitly set on this child, don't propagate the context change to it and it's children
-      if (childView._context) { continue; }
-
-      set(childView, 'context', newContext);
-      contextDidChange(childView); // TODO: don't call contextDidChange recursively
     }
   }
 }
