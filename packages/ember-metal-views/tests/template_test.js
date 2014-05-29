@@ -1,10 +1,6 @@
-import { testsFor, View, $, equalHTML, appendTo } from "ember-metal-views/tests/test_helpers";
+import { testsFor, $, equalHTML, appendTo } from "ember-metal-views/tests/test_helpers";
 
-QUnit.module("ember-metal-views - template support", {
-  setup: function() {
-    $('#qunit-fixture').innerHTML = '';
-  }
-});
+testsFor("ember-metal-views - template support");
 
 test("a view can have a template", function() {
   var view = {
@@ -19,6 +15,6 @@ test("a view can have a template", function() {
     prop: "WAT"
   };
 
-  appendTo(view, '#qunit-fixture');
-  equalHTML('#qunit-fixture', "<div>WAT</div>");
+  appendTo(view);
+  equalHTML('qunit-fixture', "<div>WAT</div>");
 });

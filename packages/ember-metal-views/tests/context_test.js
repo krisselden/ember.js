@@ -1,4 +1,4 @@
-import { testsFor, View, $, set, appendTo } from "ember-metal-views/tests/test_helpers";
+import { testsFor, subject, $, set, appendTo } from "ember-metal-views/tests/test_helpers";
 import { addObserver } from "ember-metal/observer";
 
 var view;
@@ -16,7 +16,7 @@ test("basics", function() {
   var context = {foo: 'foo is here'};
   set(view, 'context', context);
 
-  appendTo(view, '#qunit-fixture');
+  appendTo(view);
   var childView = view._childViews[0];
   equal(context, childView.context, "The parent view's context was set on the child");
 
@@ -24,7 +24,7 @@ test("basics", function() {
   set(view, 'context', context);
   equal(context, childView.context, "Changing a parent view's context propagates it to the child");
 
-  View.destroy(view);
+  subject().destroy(view);
 });
 
 test("the shared observer for views' context doesn't leak", function() {
@@ -50,8 +50,8 @@ test("the shared observer for views' context doesn't leak", function() {
   equal(view1.context, newContext, "The new context was set properly");
   equal(view2.context, context2, "The new context didn't leak over to the other view");
 
-  View.destroy(view1);
-  View.destroy(view2);
+  subject().destroy(view1);
+  subject().destroy(view2);
 });
 
 test("explicitly set child view contexts aren't clobbered by parent context changes", function() {
@@ -59,12 +59,12 @@ test("explicitly set child view contexts aren't clobbered by parent context chan
       childContext = {},
       childView = {isView: true, context: childContext},
       view = {
-        isView: true, 
+        isView: true,
         context: parentContext,
         _childViews: [childView]
       };
 
-  appendTo(view, '#qunit-fixture');
+  appendTo(view);
 
   parentContext = {};
   set(view, 'context', parentContext);
@@ -81,7 +81,7 @@ test("explicitly set child view contexts aren't clobbered by parent context chan
   equal(view.context, parentContext, "parent context changed");
   equal(childView.context, childContext, "child context hasn't changed");
 
-  View.destroy(view);
+  subject().destroy(view);
 });
 
 

@@ -1,7 +1,7 @@
 import run from "ember-metal/run_loop";
 import { indexOf } from "ember-metal/array";
 import { meta, META_KEY } from "ember-metal/utils";
-import { querySelector, createElement } from "ember-metal-views/dom";
+import { createElement } from "ember-metal-views/dom";
 import { addObserver } from "ember-metal/observer";
 import { set } from "ember-metal/property_set";
 import { lookupView, setupView, teardownView, setupEventDispatcher, reset, events } from "ember-metal-views/events";
@@ -26,12 +26,13 @@ addObserver(FAKE_PROTO, '_parentView', Ember.NO_TARGET, contextDidChange);
 
 var SHARED_META = meta(FAKE_PROTO);
 
+function Renderer() {}
+
 function scheduleRender(render) {
   return run.scheduleOnce('render', null, render);
 }
 
-function appendTo(view, selector) {
-  var target = typeof selector === 'string' ? querySelector(selector) : selector;
+function appendTo(view, target) {
   view._scheduledInsert = scheduleRender(function() {
     _render(view, function (fragOrEl) {
       var start = document.createTextNode(''),
@@ -485,4 +486,11 @@ function contextDidChange(view) {
 
 var render = _render;
 
-export { reset, events, appendTo, render, remove, destroy };
+Renderer.prototype.reset = reset;
+Renderer.prototype.events = events;
+Renderer.prototype.appendTo = appendTo;
+Renderer.prototype.destroy = destroy;
+
+export default Renderer;
+
+
