@@ -139,21 +139,6 @@ test("attributeBindings", function() {
   equalHTML('qunit-fixture', '<a href="/bar">ohai</a>', "Attribute updated when set");
 });
 
-test("transclusion", function() {
-  var originalElement = document.createElement('foo-component');
-  originalElement.textContent = 'derp';
-
-  view = {
-    isView: true,
-    tagName: 'div',
-    element: originalElement
-  };
-
-  appendTo(view);
-  equalHTML('qunit-fixture', '<div>derp</div>', "The passed in element is replaced, content is maintained");
-
-});
-
 test("classNameBindings", function() {
   view = {
     isView: true,

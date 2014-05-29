@@ -6,10 +6,16 @@ import Renderer from "ember-metal-views";
 
 var renderer;
 
+var hooks = {
+  scheduleRender: function (renderer, render) {
+    render.call(renderer);
+  }
+};
+
 export function testsFor(name, options) {
   QUnit.module(name, {
     setup: function() {
-      renderer = new Renderer();
+      renderer = new Renderer(hooks);
       if (options && options.setup) { options.setup(renderer); }
     },
     teardown: function() {

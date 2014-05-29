@@ -1,24 +1,15 @@
-import run from "ember-metal/run_loop";
-import { indexOf } from "ember-metal/array";
 import { createElement } from "ember-metal-views/dom";
 import { lookupView, setupView, teardownView, setupEventDispatcher, reset, events } from "ember-metal-views/events";
 import { setupClassNames, setupClassNameBindings, setupAttributeBindings } from "ember-metal-views/attributes";
 import { Morph } from "morph";
 import { sendEvent } from "ember-metal/events";
 
-// FIXME: don't have a hard dependency on the ember run loop
-// FIXME: avoid render/afterRender getting defined twice
-var queues = run.queues;
-queues.splice(indexOf.call(queues, 'actions')+1, 0, 'render', 'afterRender');
-
-function Renderer() {}
-
-function scheduleRender(render) {
-  return run.scheduleOnce('render', null, render);
+function Renderer(hooks) {
+  this.hooks = hooks;
 }
 
 function appendTo(view, target) {
-  view._scheduledInsert = scheduleRender(function() {
+  view._scheduledInsert = this.hooks.scheduleRender(this, function() {
     _render(view, function (fragOrEl) {
       var start = document.createTextNode(''),
         end = document.createTextNode(''),
@@ -31,31 +22,12 @@ function appendTo(view, target) {
   });
 }
 
-// TODO: figure out the most efficent way of changing tagName
-function transclude(oldEl, newTagName) {
-  var newEl = createElement(newTagName);
-
-  // TODO: attributes?
-  newEl.innerHTML = oldEl.innerHTML; // FIXME: probably want to just move the childNodes over
-
-  if (oldEl.parentElement) {
-    oldEl.parentElement.insertBefore(newEl, oldEl);
-    oldEl.parentElement.removeChild(oldEl);
-  }
-
-  return newEl;
-}
-
 function _createElementForView(view) {
   var el, tagName;
 
   if (!view.isVirtual) {
     tagName = view.tagName || 'div';
     el = view.element = view.element || createElement(tagName);
-
-    if (view.tagName && el.tagName !== view.tagName.toUpperCase()) {
-      el = view.element = transclude(el, view.tagName);
-    }
   }
 
   return el;
@@ -294,7 +266,7 @@ function destroy(_view) {
 
 function remove(_view, shouldDestroy) {
   if (_view._scheduledInsert) {
-    run.cancel(_view._scheduledInsert);
+    this.hooks.cancelRender(_view._scheduledInsert);
     _view._scheduledInsert = null;
   }
 
