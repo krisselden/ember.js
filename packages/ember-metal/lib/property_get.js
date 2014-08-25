@@ -20,6 +20,53 @@ var FIRST_KEY = /^([^\.]+)/;
 // Otherwise simulate accessors by looking up the property directly on the
 // object.
 
+var getKey;
+
+if (MANDATORY_SETTER) {
+  getKey = function _devGetKey(obj, keyName) {
+    var meta = obj.__ember_meta__;
+    var desc = meta && meta.descs[keyName];
+    var ret;
+
+    if (desc === undefined && isPath(keyName)) {
+      return _getPath(obj, keyName);
+    }
+
+    if (desc) {
+      return desc.get(obj, keyName);
+    } else {
+      if (MANDATORY_SETTER && meta && meta.watching[keyName] > 0) {
+        ret = meta.values[keyName];
+      } else {
+        ret = obj[keyName];
+      }
+
+      if (ret === undefined &&
+          'object' === typeof obj && !(keyName in obj) && 'function' === typeof obj.unknownProperty) {
+        return obj.unknownProperty(keyName);
+      }
+
+      return ret;
+    }
+  };
+} else {
+  getKey = function _getKey(obj, keyName) {
+    var meta = obj.__ember_meta__;
+    var desc = meta && meta.descs[keyName];
+    var ret;
+    if (desc === undefined) {
+      ret = obj[keyName];
+      if (ret === undefined &&
+          'object' === typeof obj && !(keyName in obj) && 'function' === typeof obj.unknownProperty) {
+        return obj.unknownProperty(keyName);
+      }
+      return ret;
+    } else {
+      return desc.get(obj, keyName);
+    }
+  };
+}
+
 /**
   Gets the value of a property on an object. If the property is computed,
   the function will be invoked. If the property is not defined but the
@@ -44,7 +91,9 @@ var FIRST_KEY = /^([^\.]+)/;
   @param {String} keyName The property key to retrieve
   @return {Object} the property value or `null`.
 */
-var get = function get(obj, keyName) {
+var get = function get(_obj, _keyName) {
+  var obj = _obj;
+  var keyName = _keyName;
   // Helpers that operate with 'this' within an #each
   if (keyName === '') {
     return obj;
@@ -55,19 +104,7 @@ var get = function get(obj, keyName) {
     obj = null;
   }
 
-  Ember.assert("Cannot call get with "+ keyName +" key.", !!keyName);
-  Ember.assert("Cannot call get with '"+ keyName +"' on an undefined object.", obj !== undefined);
-
-  if (obj === null) {
-    var value = _getPath(obj, keyName);
-    Ember.deprecate(
-      "Ember.get fetched '"+keyName+"' from the global context. This behavior will change in the future (issue #3852)",
-      !value || (obj && obj !== Ember.lookup) || isPath(keyName) || isGlobalPath(keyName+".") // Add a . to ensure simple paths are matched.
-    );
-    return value;
-  }
-
-  var meta = obj['__ember_meta__'];
+  var meta = obj.__ember_meta__;
   var desc = meta && meta.descs[keyName];
   var ret;
 
@@ -145,7 +182,7 @@ function _getPath(root, path) {
   // property from the global object.
   // E.g. get('Ember') -> Ember
   if (root === null && !isPath(path)) {
-    return get(Ember.lookup, path);
+    return Ember.lookup[path];
   }
 
   // detect complicated paths and normalize them
@@ -161,7 +198,7 @@ function _getPath(root, path) {
   parts = path.split(".");
   len = parts.length;
   for (idx = 0; root != null && idx < len; idx++) {
-    root = get(root, parts[idx], true);
+    root = getKey(root, parts[idx]);
     if (root && root.isDestroyed) { return undefined; }
   }
   return root;
