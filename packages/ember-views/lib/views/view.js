@@ -1234,7 +1234,7 @@ var View = CoreView.extend(
   },
 
   revalidate: function() {
-    this.renderNode.lastResult.revalidate();
+    this.renderer.revalidateTopLevelView(this);
     this.scheduledRevalidation = false;
   },
 
