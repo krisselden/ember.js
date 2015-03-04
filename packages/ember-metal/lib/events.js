@@ -54,28 +54,30 @@ function indexOf(array, target, method) {
   return index;
 }
 
-function actionsFor(obj, eventName) {
-  var meta = metaFor(obj, true);
+function actionsFor(obj, eventName, m) {
+  var meta = m || metaFor(obj, true);
   var actions;
   var listeners = meta.listeners;
 
   if (!listeners) {
-    listeners = meta.listeners = create(null);
-    listeners.__source__ = obj;
+    listeners = meta.listeners = {
+      events: create(null),
+      __source__: obj
+    };
   } else if (listeners.__source__ !== obj) {
     // setup inherited copy of the listeners object
-    listeners = meta.listeners = create(listeners);
+    listeners.events =  create(listeners.events);
     listeners.__source__ = obj;
   }
 
-  actions = listeners[eventName];
+  actions = listeners.events[eventName];
 
   // if there are actions, but the eventName doesn't exist in our listeners, then copy them from the prototype
-  if (actions && actions.__source__ !== obj) {
-    actions = listeners[eventName] = listeners[eventName].slice();
+  if (typeof actions === 'object' && actions.__source__ !== obj) {
+    actions = listeners.events[eventName] = listeners.events[eventName].slice();
     actions.__source__ = obj;
   } else if (!actions) {
-    actions = listeners[eventName] = [];
+    actions = listeners.events[eventName] = [];
     actions.__source__ = obj;
   }
 
@@ -84,7 +86,7 @@ function actionsFor(obj, eventName) {
 
 export function accumulateListeners(obj, eventName, otherActions) {
   var meta = obj['__ember_meta__'];
-  var actions = meta && meta.listeners && meta.listeners[eventName];
+  var actions = meta && meta.listeners && meta.listeners.events[eventName];
 
   if (!actions) { return; }
 
@@ -116,7 +118,7 @@ export function accumulateListeners(obj, eventName, otherActions) {
   @param {Function|String} method A function or the name of a function to be called on `target`
   @param {Boolean} once A flag whether a function should only be called once
 */
-export function addListener(obj, eventName, target, method, once) {
+export function addListener(obj, eventName, target, method, once, m) {
   Ember.assert("You must pass at least an object and event name to Ember.addListener", !!obj && !!eventName);
 
   if (!method && 'function' === typeof target) {
@@ -124,7 +126,8 @@ export function addListener(obj, eventName, target, method, once) {
     target = null;
   }
 
-  var actions = actionsFor(obj, eventName);
+  var meta = m || metaFor(obj, true);
+  var actions = actionsFor(obj, eventName, meta);
   var actionIndex = indexOf(actions, target, method);
   var flags = 0;
 
@@ -155,7 +158,7 @@ export function addListener(obj, eventName, target, method, once) {
   @param {Object|Function} target A target object or a function
   @param {Function|String} method A function or the name of a function to be called on `target`
 */
-function removeListener(obj, eventName, target, method) {
+function removeListener(obj, eventName, target, method, m) {
   Ember.assert("You must pass at least an object and event name to Ember.removeListener", !!obj && !!eventName);
 
   if (!method && 'function' === typeof target) {
@@ -163,8 +166,10 @@ function removeListener(obj, eventName, target, method) {
     target = null;
   }
 
-  function _removeListener(target, method) {
-    var actions = actionsFor(obj, eventName);
+  var meta = m || metaFor(obj, true);
+
+  function _removeListener(target, method, m) {
+    var actions = actionsFor(obj, eventName, m);
     var actionIndex = indexOf(actions, target, method);
 
     // action doesn't exist, give up silently
@@ -178,14 +183,13 @@ function removeListener(obj, eventName, target, method) {
   }
 
   if (method) {
-    _removeListener(target, method);
+    _removeListener(target, method, meta);
   } else {
-    var meta = obj['__ember_meta__'];
-    var actions = meta && meta.listeners && meta.listeners[eventName];
+    var actions = meta && meta.listeners && meta.listeners.events[eventName];
 
     if (!actions) { return; }
     for (var i = actions.length - 3; i >= 0; i -= 3) {
-      _removeListener(actions[i], actions[i+1]);
+      _removeListener(actions[i], actions[i+1], m);
     }
   }
 }
@@ -283,13 +287,14 @@ export function suspendListeners(obj, eventNames, target, method, callback) {
   @param obj
 */
 export function watchedEvents(obj) {
-  var listeners = obj['__ember_meta__'].listeners;
+  var meta = obj.__ember_meta__;
+  var listeners = meta.listener;
   var ret = [];
 
   if (listeners) {
-    for (var eventName in listeners) {
-      if (eventName !== '__source__' &&
-          listeners[eventName]) {
+    var events = listeners.events;
+    for (var eventName in events) {
+      if (events[eventName]) {
         ret.push(eventName);
       }
     }
@@ -319,7 +324,7 @@ export function sendEvent(obj, eventName, params, actions) {
 
   if (!actions) {
     var meta = obj['__ember_meta__'];
-    actions = meta && meta.listeners && meta.listeners[eventName];
+    actions = meta && meta.listeners && meta.listeners.events[eventName];
   }
 
   if (!actions) { return; }
@@ -359,7 +364,7 @@ export function sendEvent(obj, eventName, params, actions) {
 */
 export function hasListeners(obj, eventName) {
   var meta = obj['__ember_meta__'];
-  var actions = meta && meta.listeners && meta.listeners[eventName];
+  var actions = meta && meta.listeners && meta.listeners.events[eventName];
 
   return !!(actions && actions.length);
 }
@@ -374,7 +379,7 @@ export function hasListeners(obj, eventName) {
 export function listenersFor(obj, eventName) {
   var ret = [];
   var meta = obj['__ember_meta__'];
-  var actions = meta && meta.listeners && meta.listeners[eventName];
+  var actions = meta && meta.listeners && meta.listeners.events[eventName];
 
   if (!actions) { return ret; }
 

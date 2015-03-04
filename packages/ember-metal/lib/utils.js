@@ -387,14 +387,14 @@ function defineMetaProperty(obj, meta) {
 
 function inheritMeta(obj, parent) {
   var meta = o_create(parent);
-  meta.watching  = o_create(meta.watching);
+  meta.watching  = o_create(parent.watching);
   meta.cache     = undefined;
   meta.cacheMeta = undefined;
   meta.source    = obj;
 
   if (Ember.FEATURES.isEnabled('mandatory-setter')) {
     if (hasPropertyAccessors) {
-      meta.values = o_create(meta.values);
+      meta.values = o_create(parent.values);
     }
   }
 

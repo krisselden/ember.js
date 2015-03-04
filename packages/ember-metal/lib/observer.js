@@ -10,6 +10,10 @@ import {
   suspendListeners,
   suspendListener
 } from "ember-metal/events";
+import {
+  meta
+} from "ember-metal/utils";
+
 /**
 @module ember-metal
 */
@@ -34,8 +38,9 @@ function beforeEvent(keyName) {
   @param {Function|String} [method]
 */
 export function addObserver(obj, _path, target, method) {
-  addListener(obj, changeEvent(_path), target, method);
-  watch(obj, _path);
+  var m = meta(obj, true);
+  addListener(obj, changeEvent(_path), target, method, false, m);
+  watch(obj, _path, m);
 
   return this;
 }
@@ -53,8 +58,9 @@ export function observersFor(obj, path) {
   @param {Function|String} [method]
 */
 export function removeObserver(obj, path, target, method) {
-  unwatch(obj, path);
-  removeListener(obj, changeEvent(path), target, method);
+  var m = meta(obj, true);
+  unwatch(obj, path, m);
+  removeListener(obj, changeEvent(path), target, method, m);
 
   return this;
 }
