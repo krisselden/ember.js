@@ -36,6 +36,48 @@ RSVP.Promise.prototype.fail = function(callback, label) {
   return this['catch'](callback, label);
 };
 
+var errorDispatcher = {
+  handlers: [],
+  register(fn) {
+    this.handlers.push(fn);
+  },
+  unregister(fn) {
+    let handlers = this.handlers;
+    for (let i=0; i<handlers.length; i++) {
+      if (handlers[i] === fn) {
+        handlers.splice(i, 1);
+        return true;
+      }
+    }
+    return false;
+  },
+  dispatch(e) {
+    let handlers = this.handlers;
+    for(var i = handlers.length; i--; ) {
+      if (handlers[i](e) === false) {
+        break;
+      }
+    }
+  }
+};
+
+RSVP.on('error', onerrorDefault);
+
+// bottom of the stack
+errorDispatcher.register(function (error) {
+  Logger.error(error.stack);
+  return false;
+});
+
+errorDispatcher.register(function (error) {
+  if (Ember.onerror) {
+    Ember.onerror(error);
+    return false;
+  }
+});
+
+export { errorDispatcher };
+
 export function onerrorDefault(e) {
   var error;
 
@@ -51,26 +93,8 @@ export function onerrorDefault(e) {
   }
 
   if (error && error.name !== 'TransitionAborted') {
-    if (Ember.testing) {
-      // ES6TODO: remove when possible
-      if (!Test && Ember.__loader.registry[testModuleName]) {
-        Test = requireModule(testModuleName)['default'];
-      }
-
-      if (Test && Test.adapter) {
-        Test.adapter.exception(error);
-        Logger.error(error.stack);
-      } else {
-        throw error;
-      }
-    } else if (Ember.onerror) {
-      Ember.onerror(error);
-    } else {
-      Logger.error(error.stack);
-    }
+    errorDispatcher.dispatch(e);
   }
 }
-
-RSVP.on('error', onerrorDefault);
 
 export default RSVP;

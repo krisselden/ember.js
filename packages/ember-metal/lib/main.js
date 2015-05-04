@@ -220,6 +220,8 @@ import {
 
 import Stream from "ember-metal/streams/stream";
 
+import errorHandlers from 'ember-metal/error_handlers';
+
 // END IMPORTS
 
 // BEGIN EXPORTS
@@ -415,6 +417,19 @@ if (Ember.FEATURES.isEnabled('ember-metal-stream')) {
   @param {Exception} error the error object
 */
 Ember.onerror = null;
+
+/*
+ * @private
+ */
+Ember.errorHandlers = errorHandlers;
+
+errorHandlers.register(function (error) {
+  if (Ember.onerror) {
+    Ember.onerror(error);
+    return false;
+  }
+});
+
 // END EXPORTS
 
 // do this for side-effects of updating Ember.assert, warn, etc when

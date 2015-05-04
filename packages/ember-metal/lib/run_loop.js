@@ -1,4 +1,3 @@
-import Ember from 'ember-metal/core';
 import {
   GUID_KEY
 } from 'ember-metal/utils';
@@ -8,6 +7,7 @@ import {
   endPropertyChanges
 } from 'ember-metal/property_events';
 import Backburner from 'backburner';
+import { dispatch } from 'ember-metal/error_handlers';
 
 function onBegin(current) {
   run.currentRunLoop = current;
@@ -27,8 +27,7 @@ var backburner = new Backburner(['sync', 'actions', 'destroy'], {
   defaultQueue: 'actions',
   onBegin: onBegin,
   onEnd: onEnd,
-  onErrorTarget: Ember,
-  onErrorMethod: 'onerror'
+  onError: dispatch
 });
 
 // ..........................................................
