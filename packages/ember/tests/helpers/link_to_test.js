@@ -1252,7 +1252,7 @@ QUnit.test('the {{link-to}} helper does not call preventDefault if `preventDefau
 QUnit.test('the {{link-to}} helper does not throw an error if its route has exited', function() {
   expect(0);
 
-  setTemplate('application', compile("{{#link-to 'index' id='home-link'}}Home{{/link-to}}{{#link-to 'post' defaultPost id='default-post-link'}}Default Post{{/link-to}}{{#if currentPost}}{{#link-to 'post' id='post-link'}}Post{{/link-to}}{{/if}}"));
+  setTemplate('application', compile("{{#link-to 'index' id='home-link'}}Home{{/link-to}}{{#link-to 'post' defaultPost id='default-post-link'}}Default Post{{/link-to}}{{#if currentPost}}{{#link-to 'post' currentPost id='current-post-link'}}Post{{/link-to}}{{/if}}"));
 
   App.ApplicationController = Controller.extend({
     postController: inject.controller('post'),
