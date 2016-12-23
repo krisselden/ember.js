@@ -21,6 +21,7 @@ var vendoredES6Package = require('emberjs-build/lib/es6-vendored-package');
 
 var Funnel = require('broccoli-funnel');
 var Rollup = require('broccoli-rollup');
+var replace = require('broccoli-string-replace');
 
 var rollupEnifed = {
   transformBundle(code, options) {
@@ -221,7 +222,14 @@ var glimmerEngine = require('glimmer-engine/ember-cli-build')({
 var find = require('broccoli-stew').find;
 
 function glimmerPackage(name) {
-  return find(glimmerEngine, 'named-amd/' + name + '/**/*.js');
+  return replace(find(glimmerEngine, 'named-amd/' + name + '/**/*.js'), {
+    files: ['**/*.js'],
+    pattern: {
+      match: /\/\/#\s+sourceMappingURL.*/g,
+      replacement: ''
+    },
+    annotation: 'strip sourceMappingURL'
+  });
 }
 
 function getVersion() {
