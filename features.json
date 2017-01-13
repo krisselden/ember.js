@@ -7,6 +7,6 @@
     "ember-glimmer-allow-backtracking-rerender": false,
     "ember-testing-resume-test": false,
     "ember-factory-for": true,
-    "ember-no-double-extend": false
+    "ember-no-double-extend": true
   }
 }
